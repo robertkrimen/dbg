@@ -39,25 +39,25 @@ var (
 #### func  Dbg
 
 ```go
-func Dbg(input ...interface{})
+func Dbg(message ...interface{})
 ```
-Dbg will output the given input to Writer, applying any special formatting if
+Dbg will output the given message to Writer, applying any special formatting if
 necessary.
 
 #### func  Dbgf
 
 ```go
-func Dbgf(input ...interface{})
+func Dbgf(message ...interface{})
 ```
-Dbg will output the given input to Writer via fmt.Sprintf, with the first
+Dbg will output the given message to Writer via fmt.Sprintf, with the first
 argument being the format string.
 
 #### func  Fmt
 
 ```go
-func Fmt(input ...interface{}) string
+func Fmt(message ...interface{}) string
 ```
-Fmt will process the input via fmt.Sprintf, with the first argument being the
+Fmt will process the message via fmt.Sprintf, with the first argument being the
 format string and return the result.
 
 #### func  HereBeDragons
