@@ -39,109 +39,55 @@ var (
 	// input as arguments to fmt.Sprintf, with the first argument 
 	// being the format string.
 	// Assumed to be a string at the start of the first argument.
-	FormatIf                 = regexp.MustCompile(`^\\:`)
+	FormatIf                 = regexp.MustCompile(`^\\[:%]`)
+	CommandIf				 = regexp.MustCompile(`^\\/`)
 )
 
+var  _debugDebug *Debug
+func _debug() *Debug {
+	if _debugDebug == nil {
+		_debugDebug = New()
+	}
+	return _debugDebug
+}
+
 // Dbg will output the given message to Writer, applying any special formatting if necessary.
-func Dbg(message ...interface{}) func(string, ...interface{}) string {
+func Dbg(message ...interface{}) Fn {
+	return _debug().Dbg(message...)
+}
+
+type Debug struct {
+	Writer io.Writer
+	ToStringFormat string
+	FormatIf *regexp.Regexp
+	CommandIf *regexp.Regexp
+}
+
+func New() *Debug {
+	return &Debug{
+		Writer: Writer,
+		ToStringFormat: ToStringFormat,
+		FormatIf: FormatIf,
+		CommandIf: CommandIf,
+	}
+}
+
+type Fn func(string, ...interface{}) string
+
+func (self *Debug) Dbg(message ...interface{}) Fn {
 	if len(message) == 0 {
-		dbg := _dbg{}
-		return func(ctl string, message ...interface{}) string {
-			process := dbg.process(ctl, message...)
-			{
-				message := process.compose(1)
-				if process.quiet {
-					return message
-				}
-				fmt.Fprintln(Writer, message)
-				return ""
+		return func(command string, message ...interface{}) string {
+			cmd := self.command(command, message...)
+			msg := self.run(cmd, 1)
+			if cmd.quiet {
+				return msg
 			}
-		}
-	}
-	fmt.Fprintln(Writer, inputToString(message...))
-	return nil
-}
-
-// Dbg will output the given message to Writer via fmt.Sprintf, with the first argument being the format string.
-func Dbgf(message ...interface{}) {
-	fmt.Fprintln(Writer, Fmt(message...))
-}
-
-// Fmt will process the message via fmt.Sprintf, with the first argument being the format string and return the result.
-func Fmt(message ...interface{}) string {
-	var format interface{} = ""
-	if len(message) > 0 {
-		format = message[0]
-		message = message[1:]
-	}
-	return fmt.Sprintf(fmt.Sprintf("%v", format), message...)
-}
-
-// HereBeDragons returns a string formatted like Dbg, but prefixed with the call location (function name).
-func HereBeDragons(input ...interface{}) string {
-	pc, _, _, _ := runtime.Caller(1)
-	name := runtime.FuncForPC(pc).Name()
-	message := fmt.Sprintf("Here be dragons @ %s", name)
-	if len(input) > 0 {
-		message += fmt.Sprintf(": %s", inputToString(input))
-	}
-	return message
-}
-
-func inputToString(input ...interface{}) string {
-	if len(input) == 0 {
-		return ""
-	}
-	if FormatIf != nil {
-		switch value := input[0].(type) {
-		case string:
-			if match := FormatIf.FindStringIndex(value); match != nil {
-				format := value[match[1]:]
-				input = input[1:]
-				return fmt.Sprintf(format, input...)
-			}
-		}
-	}
-
-	// No (Sprintf) formatting done
-	output := []string{}
-	for _, argument := range input {
-		output = append(output, toString(argument))
-	}
-	return strings.Join(output, " ")
-}
-
-func toString(value interface{}) string {
-	return fmt.Sprintf(ToStringFormat, value)
-}
-
-func compose(format string, message ...interface{}) string {
-	if format == "" {
-		if len(message) == 0 {
+			fmt.Fprintln(self.Writer, msg)
 			return ""
 		}
-
-		if FormatIf != nil {
-			switch value := message[0].(type) {
-			case string:
-				if match := FormatIf.FindStringIndex(value); match != nil {
-					format := value[match[1]:]
-					message = message[1:]
-					return fmt.Sprintf(format, message...)
-				}
-			}
-		}
-
-		output := []string{}
-		for _, argument := range message {
-			output = append(output, toString(argument))
-		}
-		return strings.Join(output, " ")
 	}
-	return fmt.Sprintf(format, message...)
-}
-
-type _dbg struct {
+	fmt.Fprintln(self.Writer, self.compose("", message...))
+	return nil
 }
 
 var (
@@ -150,18 +96,18 @@ var (
 	quiet_re = regexp.MustCompile(`/<`)
 )
 
-type _process struct {
+type _dbgCommand struct {
 	quiet bool
 	caller int
 	format bool
 	message []interface{}
 }
 
-func (self _process) compose(skip int) string {
+func (self *Debug) run(cmd _dbgCommand, skip int) string {
 	output := []string{}
 
 	{
-		caller := self.caller
+		caller := cmd.caller
 		if caller > 0 {
 			caller += skip
 			pc, _, _, _ := runtime.Caller(caller)
@@ -170,53 +116,53 @@ func (self _process) compose(skip int) string {
 		}
 	}
 
-	message := ""
-	if self.format {
-		if len(self.message) > 0 {
-			switch format := self.message[0].(type) {
+	msg := ""
+	if cmd.format {
+		if len(cmd.message) > 0 {
+			switch format := cmd.message[0].(type) {
 			case string:
-				message = compose(format, self.message[1:]...)
+				msg = self.compose(format, cmd.message[1:]...)
 			default:
-				message = compose("", self.message...)
+				msg = self.compose("", cmd.message...)
 			}
 		}
 	} else {
-		message = compose("", self.message...)
+		msg = self.compose("", cmd.message...)
 	}
 
-	if message != "" {
-		output = append(output, message)
+	if msg != "" {
+		output = append(output, msg)
 	}
 	return strings.Join(output, " ")
 }
 
-func (self _dbg) process(ctl string, message ...interface{}) _process {
+func (self *Debug) command(command string, message ...interface{}) _dbgCommand {
 
 	quiet := false
 	caller := -1
 	format := false
 
-	if len(ctl) > 0 {
-		if ctl[0] == '<' {
+	if len(command) > 0 {
+		if command[0] == '<' {
 			quiet = true
-			ctl = ctl[1:]
+			command = command[1:]
 		}
-		if match := caller_re.FindStringSubmatch(ctl); match != nil {
+		if match := caller_re.FindStringSubmatch(command); match != nil {
 			caller = 1
 			if match[1] != "" {
 				tmp, _ := strconv.ParseInt(match[1], 10, 32)
 				caller = int(tmp)
 			}
 		}
-		if format_re.MatchString(ctl) {
+		if format_re.MatchString(command) {
 			format = true
 		}
-		if quiet_re.MatchString(ctl) {
+		if quiet_re.MatchString(command) {
 			quiet = true
 		}
 	}
 
-	return _process{
+	return _dbgCommand{
 		quiet: quiet,
 		caller: caller,
 		format: format,
@@ -224,5 +170,35 @@ func (self _dbg) process(ctl string, message ...interface{}) _process {
 	}
 }
 
-// dbg()("</@", ...)
-// dbg()("/%", ...)
+
+func (self *Debug) compose(format string, message ...interface{}) string {
+	if format == "" {
+		if len(message) == 0 {
+			return ""
+		}
+
+		if self.FormatIf != nil {
+			switch value := message[0].(type) {
+			case string:
+				if match := self.FormatIf.FindStringIndex(value); match != nil {
+					format := value[match[1]:]
+					message = message[1:]
+					return fmt.Sprintf(format, message...)
+				}
+			}
+		}
+
+		// No (Sprintf) formatting done
+		output := []string{}
+		for _, argument := range message {
+			output = append(output, self.toString(argument))
+		}
+		return strings.Join(output, " ")
+	}
+	return fmt.Sprintf(format, message...)
+}
+
+func (self *Debug) toString(value interface{}) string {
+	return fmt.Sprintf(self.ToStringFormat, value)
+}
+
