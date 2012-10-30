@@ -86,6 +86,7 @@ func (self *Debug) Dbg(message ...interface{}) Fn {
 			return ""
 		}
 	}
+	// This is probably where CommandIf detection would happen
 	fmt.Fprintln(self.Writer, self.compose("", message...))
 	return nil
 }

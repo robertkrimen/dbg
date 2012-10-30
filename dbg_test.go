@@ -33,11 +33,11 @@ func Test(t *testing.T) {
 	Is(buffer.String(), "Hello, World.\nWhen it gets very loud, it gets very LOUD indeed.\n")
 }
 
-func TestDbg_dbg(t *testing.T) {
+func TestDbgFn(t *testing.T) {
 	Terst(t)
 
 	Is(Dbg()("<", "Hello, World."), "Hello, World.")
-	Is(Dbg()("</@", "Hello, World."), "@ github.com/robertkrimen/dbg.TestDbg_dbg: Hello, World.")
+	Is(Dbg()("</@", "Hello, World."), "@ github.com/robertkrimen/dbg.TestDbgFn: Hello, World.")
 }
 
 func Test_run(t *testing.T) {
