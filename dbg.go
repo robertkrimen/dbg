@@ -24,26 +24,27 @@ import (
 	"os"
 	"regexp"
 	"runtime"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var (
 	// The writer to send Dbg output to.
-	Writer         io.Writer = os.Stderr
+	Writer io.Writer = os.Stderr
 
 	// The fmt "verb" to use when formatting a value for output.
-	ToStringFormat string    = "%v"
+	ToStringFormat string = "%v"
 
 	// The pattern to look for when detecting whether to use the
 	// input as arguments to fmt.Sprintf, with the first argument 
 	// being the format string.
 	// Assumed to be a string at the start of the first argument.
-	FormatIf                 = regexp.MustCompile(`^\\[:%]`)
-	CommandIf				 = regexp.MustCompile(`^\\/`)
+	FormatIf  = regexp.MustCompile(`^\\[:%]`)
+	CommandIf = regexp.MustCompile(`^\\/`)
 )
 
-var  _debugDebug *Debug
+var _debugDebug *Debug
+
 func _debug() *Debug {
 	if _debugDebug == nil {
 		_debugDebug = New()
@@ -57,18 +58,18 @@ func Dbg(message ...interface{}) Fn {
 }
 
 type Debug struct {
-	Writer io.Writer
+	Writer         io.Writer
 	ToStringFormat string
-	FormatIf *regexp.Regexp
-	CommandIf *regexp.Regexp
+	FormatIf       *regexp.Regexp
+	CommandIf      *regexp.Regexp
 }
 
 func New() *Debug {
 	return &Debug{
-		Writer: Writer,
+		Writer:         Writer,
 		ToStringFormat: ToStringFormat,
-		FormatIf: FormatIf,
-		CommandIf: CommandIf,
+		FormatIf:       FormatIf,
+		CommandIf:      CommandIf,
 	}
 }
 
@@ -94,13 +95,13 @@ func (self *Debug) Dbg(message ...interface{}) Fn {
 var (
 	caller_re = regexp.MustCompile(`/@(?::(\d+))?`)
 	format_re = regexp.MustCompile(`/%`)
-	quiet_re = regexp.MustCompile(`/<`)
+	quiet_re  = regexp.MustCompile(`/<`)
 )
 
 type _dbgCommand struct {
-	quiet bool
-	caller int
-	format bool
+	quiet   bool
+	caller  int
+	format  bool
 	message []interface{}
 }
 
@@ -164,13 +165,12 @@ func (self *Debug) command(command string, message ...interface{}) _dbgCommand {
 	}
 
 	return _dbgCommand{
-		quiet: quiet,
-		caller: caller,
-		format: format,
+		quiet:   quiet,
+		caller:  caller,
+		format:  format,
 		message: message,
 	}
 }
-
 
 func (self *Debug) compose(format string, message ...interface{}) string {
 	if format == "" {
@@ -202,4 +202,3 @@ func (self *Debug) compose(format string, message ...interface{}) string {
 func (self *Debug) toString(value interface{}) string {
 	return fmt.Sprintf(self.ToStringFormat, value)
 }
-
