@@ -31,11 +31,11 @@ Package dbg is a println/printf/log-debugging utility library.
     # "2013/01/28 17:16:32 Another example: 1 2 3 4 5"
 
     dbgf("%@: Include the function name for a little context (via %s)", "%@")
-    # "2013/01/28 17:18:56 github.com/robertkrimen/dbg.TestSynopsis: Include the function name for a little context (via %@)"
+    # "2013... github.com/robertkrimen/dbg.TestSynopsis: Include the function name for a little context (via %@)"
 
 By default, dbg uses log (log.Println, log.Printf, log.Panic, etc.) for output.
-However, you can also provide your own output destination by supplying a invoking dbg.New
-with a customization function:
+However, you can also provide your own output destination by invoking dbg.New with
+a customization function:
 
     import (
         "bytes"

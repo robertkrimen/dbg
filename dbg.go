@@ -19,7 +19,7 @@ Package dbg is a println/printf/log-debugging utility library.
 
     dbgf("%/panic//Can also panic %s", "this")
     # "Can also panic this"
-    # ...and then, os.Exit(1)
+    # ...as a panic, equivalent to: panic("Can also panic this")
 
     dbgf("Any %s arguments without a corresponding %%", "extra", "are treated like arguments to dbg()")
     # "2013/01/28 17:14:40 Any extra arguments (without a corresponding %) are treated like arguments to dbg()"
@@ -28,11 +28,11 @@ Package dbg is a println/printf/log-debugging utility library.
     # "2013/01/28 17:16:32 Another example: 1 2 3 4 5"
 
     dbgf("%@: Include the function name for a little context (via %s)", "%@")
-    # "2013/01/28 17:18:56 github.com/robertkrimen/dbg.TestSynopsis: Include the function name for a little context (via %@)"
+    # "2013... github.com/robertkrimen/dbg.TestSynopsis: Include the function name for a little context (via %@)"
 
 By default, dbg uses log (log.Println, log.Printf, log.Panic, etc.) for output.
-However, you can also provide your own output destination by supplying a invoking dbg.New 
-with a customization function:
+However, you can also provide your own output destination by invoking dbg.New with
+a customization function:
 
     import (
         "bytes"
