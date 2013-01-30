@@ -22,7 +22,7 @@ Package dbg is a println/printf/log-debugging utility library.
 
     dbgf("%/panic//Can also panic %s", "this")
     # "Can also panic this"
-    # ...and then, os.Exit(1)
+    # ...as a panic, equivalent to: panic("Can also panic this")
 
     dbgf("Any %s arguments without a corresponding %%", "extra", "are treated like arguments to dbg()")
     # "2013/01/28 17:14:40 Any extra arguments (without a corresponding %) are treated like arguments to dbg()"
@@ -117,9 +117,12 @@ func (self Dbgr) Dbgf(values ...interface{})
 ```go
 func (self *Dbgr) SetOutput(output interface{})
 ```
-SetOutput will accept a *log.Logger or io.Writer as a destination for output.
-Passing in nil will reset output to go to the standard logger from the log
-package.
+SetOutput will accept the following as a destination for output:
+
+    *log.Logger         Print*/Panic*/Fatal* of the logger
+    io.Writer           -
+    nil                 Reset to the default output (os.Stderr)
+    "log"               Print*/Panic*/Fatal* via the "log" package
 
 --
 **godocdown** http://github.com/robertkrimen/godocdown

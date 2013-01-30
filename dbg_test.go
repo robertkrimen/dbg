@@ -68,6 +68,15 @@ func Test_operandCount(t *testing.T) {
 	test("Something extra at %s end (with %%) %.2f:", 2)
 }
 
+func Test_SetOutput(t *testing.T) {
+	Terst(t)
+
+	dbgr := NewDbgr()
+	dbgr.SetOutput("log")
+	dbgr.SetOutput(nil)
+	// Test for no panicking!
+}
+
 func Test(t *testing.T) {
 	Terst(t)
 

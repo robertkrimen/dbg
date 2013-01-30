@@ -248,18 +248,21 @@ func (self Dbgr) dbgf(values ...interface{}) {
 // Idiot-proof &Dbgr{}, etc.
 func (self *Dbgr) getEmit() _emit {
 	if self.emit == nil {
-		self.emit = _emitLog{}
+		self.emit = standardEmit()
 	}
 	return self.emit
 }
 
-/*
-SetOutput will accept a *log.Logger or io.Writer as a destination for output.
-Passing in nil will reset output to go to the standard logger from the log package.
-*/
+// SetOutput will accept the following as a destination for output:
+//
+//      *log.Logger         Print*/Panic*/Fatal* of the logger
+//      io.Writer           - 
+//      nil                 Reset to the default output (os.Stderr)
+//      "log"               Print*/Panic*/Fatal* via the "log" package
+//
 func (self *Dbgr) SetOutput(output interface{}) {
 	if output == nil {
-		self.emit = _emitLog{}
+		self.emit = standardEmit()
 		return
 	}
 	switch output := output.(type) {
@@ -273,6 +276,11 @@ func (self *Dbgr) SetOutput(output interface{}) {
 			writer: output,
 		}
 		return
+	case string:
+		if output == "log" {
+			self.emit = _emitLog{}
+			return
+		}
 	}
 	panic(output)
 }
@@ -280,6 +288,12 @@ func (self *Dbgr) SetOutput(output interface{}) {
 // ======== //
 // = emit = //
 // ======== //
+
+func standardEmit() _emit {
+	return _emitWriter{
+		writer: os.Stderr,
+	}
+}
 
 func ln(tmp string) string {
 	length := len(tmp)
