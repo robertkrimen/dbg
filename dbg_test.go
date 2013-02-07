@@ -2,6 +2,7 @@ package dbg
 
 import (
 	"bytes"
+	"fmt"
 	. "github.com/robertkrimen/terst"
 	"math"
 	"testing"
@@ -138,11 +139,34 @@ func Test(t *testing.T) {
 	Is(buffer.String(), "Something extra at the end (with %): 3.14 + 1\n")
 }
 
+func TestCheck(t *testing.T) {
+	Terst(t)
+
+	var buffer bytes.Buffer
+	_, dbgf := New(func(dbgr *Dbgr) {
+		dbgr.SetOutput(&buffer)
+	})
+
+	buffer.Reset()
+	dbgf("%/check", error(nil))
+	Is(buffer.String(), "")
+
+	buffer.Reset()
+	dbgf("%/check//Ignore this: %v", fmt.Errorf("Something happens."))
+	Is(buffer.String(), "")
+
+	if false {
+		dbgf("%/check//Panic on just a regular value: ", math.Pi)
+		dbgf("%/check//Pay attention to this: %.2f:", math.Pi, nil, fmt.Errorf("Something happens, after!"))
+		dbgf("%/check", nil, fmt.Errorf("Something happens, after."))
+		dbgf("%/check", fmt.Errorf("Something happens."))
+	}
+}
+
 func TestSynopsis(t *testing.T) {
 	Terst(t)
 
 	var buffer bytes.Buffer
-
 	dbg, dbgf := New(func(dbgr *Dbgr) {
 		dbgr.SetOutput(&buffer)
 	})
